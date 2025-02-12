@@ -568,6 +568,30 @@ void ar(string scalar xvar, 		// added variable name
 	// form the MA(q) variance of the errors
 	//   see -help mf_spmatbanded- for banded matrix functions
     // TODO can use smatband routines here. 
+    arima_b_matrix = st_matrix("e(b)")
+    // typical e(b) matrix looks like:
+    // e(b)[1,8]
+    //            wpi:       ARMA:       ARMA:       ARMA:       ARMA:       ARMA:       ARMA:      sigma:
+    //                          L.          L.         L2.         L3.         L4.         L5.            
+    //          _cons          ar          ma          ma          ma          ma          ma       _cons
+    // y1   .74660632   .85192643  -.33338791  -.17373807   .09292256   .17103687  -.07923895    .7132336
+    //
+    arima_ar_max = st_numscalar("e(ar_max)")
+    arima_ma_max = st_numscalar("e(ma_max)")
+    arima_sigma = st_numscalar("e(sigma)")
+    // extract ma columns
+    arima_ma_matrix = arima_b_matrix[1, (cols(arima_b_matrix) - arima_ma_max)..(cols(arima_b_matrix) - 1)] 
+    // append 1 to the start of the matrix
+    arima_ma_matrix = J(1,1,1),arima_ma_matrix
+    // compute gamma vector
+    gamma = J(arima_ma_max + 1, 1, 0)
+    for (i = 1; i <= arima_ma_max + 1; i++) {
+        arima_ma_right_submatrix = arima_ma_matrix[1, 1..(cols(arima_ma_matrix) - (i - 1))]
+        arima_ma_left_submatrix = arima_ma_matrix[1, (1 + (i - 1))..cols(arima_ma_matrix)]
+        gamma[i] = arima_sigma * (arima_ma_right_submatrix * arima_ma_left_submatrix')
+    }
+    "X matrix"
+    X
 	S = I(rX)  // just a placeholder for variance matrix S
 "S"; S
 
