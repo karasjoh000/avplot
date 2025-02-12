@@ -560,9 +560,7 @@ void ar(string scalar xvar, 		// added variable name
 		st_select(w, wmiss, nonmiss)
 	}
 	rX = rows(yX)
-// Question: is the avplot for just ARIMA here or need to handle multiple cases? 
-// What cases need to be handeled? 
-"got here 2"	   
+"got here 2"   
     // TODO: get e(b) from stata using st_* transfer object to mata memory. 
     // TODO: form sigma hat matrix here. kj
 	// form the MA(q) variance of the errors
@@ -579,6 +577,7 @@ void ar(string scalar xvar, 		// added variable name
     arima_ar_max = st_numscalar("e(ar_max)")
     arima_ma_max = st_numscalar("e(ma_max)")
     arima_sigma = st_numscalar("e(sigma)")
+    arima_sigma2 = arima_sigma^2 // NOT SURE IF THIS SHOULD BE SQUARED
     // extract ma columns
     arima_ma_matrix = arima_b_matrix[1, (cols(arima_b_matrix) - arima_ma_max)..(cols(arima_b_matrix) - 1)] 
     // append 1 to the start of the matrix
@@ -590,9 +589,13 @@ void ar(string scalar xvar, 		// added variable name
         arima_ma_left_submatrix = arima_ma_matrix[1, (1 + (i - 1))..cols(arima_ma_matrix)]
         gamma[i] = arima_sigma * (arima_ma_right_submatrix * arima_ma_left_submatrix')
     }
-    "X matrix"
-    X
-	S = I(rX)  // just a placeholder for variance matrix S
+    // append zeros to the end of the gamma vector.
+    n_padding = rX - (arima_ma_max + 1)
+    v_padding = J(n_padding, 1, 0)
+    v_padding
+    gamma_padded = gamma \ v_padding
+    // compute the covariance matrix using tolpitz
+    S = Toeplitz(gamma_padded, gamma_padded')
 "S"; S
 
 	// calculate (y_tilde,X_tilde) in yX_
