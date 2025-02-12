@@ -2,7 +2,7 @@
 	
 capture set trace off
 capture qui log using test_gavplot, replace
-cd "~/Documents/econ/research/stata/ado/personal/gavplot/"
+//cd "~/Documents/econ/research/stata/ado/personal/gavplot/"
 cscript "gavplot for ivregress, etc." adofile gavplot
 about
 which gavplot
@@ -11,7 +11,7 @@ which gavplot
 // get rid of asterisks in e(x*|X*)
 
 
-use hsng2, clear
+webuse hsng2, clear
 local x_av hsngval
 
 // example from -help reg3-
