@@ -630,13 +630,12 @@ string scalar make_yX(string scalar xvar,	// added variable
 	real scalar arnum
 
 	yvar = st_global("e(depvar)")
-	Xvars = st_global("e(covariates)")
+	Xvars = tokens(st_global("e(covariates)"))
 	if (Xvars=="_NONE") Xvars = J(1,0,"") // void rowvector
-	else Xvars = tokens(Xvars)
 	yXvars = J(1,0,"")
-	ars = st_global("e(ar)")
+	ars = st_global("e(ar)")'
 	if (ars!="") {  // add lag operators onto lagged terms
-		ars = subinword(tokens(ars), "1", "") // remove 1 from L1
+//		ars = subinword(tokens(ars), "1", "") // remove 1 from L1
 		arcount = cols(ars)
 		for (i=1; i<=arcount; i++) 
 			yXvars = yXvars, "L"+ars[i]+"." :+ (yvar,Xvars)
@@ -644,11 +643,11 @@ string scalar make_yX(string scalar xvar,	// added variable
 	else arcount = 0
 
 	yXvars = Xvars, yXvars // add unlagged Xvars
-	if (!anyof(yXvars, xvar)){  // check if av x is in X
+	if (!anyof(yXvars, xvar)) {  // check if av x is in X
 		printf(`"{err}Added-variable {bf:%s} not found"', xvar)
 		printf("{err} in RHS covariates.\n")
 		printf("{err}Make sure L#. is specified if needed.\n")
-		exit(198)		
+		exit(322)		
 	}
 	if (invtokens(yXvars)!=xvar) /// place xvar as the 2nd var
 		yXvars = yvar, xvar, select(yXvars, yXvars:!=xvar)
@@ -656,8 +655,6 @@ string scalar make_yX(string scalar xvar,	// added variable
 	if (cons!="") yXvars = yXvars, cons
 	
 	// find estimates b and b_se for xvar
-    // TODO: st_matrix get MA process terms here. 
-    // TODO: spmatbanded makes a full banded matix. 
 	ebse = st_matrix("e(b)")' // will have columns b and se
 	ebse = ebse, sqrt(diagonal(st_matrix("e(V)"))) // add se
 	ebst = st_matrixcolstripe("e(b)")
@@ -668,7 +665,7 @@ string scalar make_yX(string scalar xvar,	// added variable
 	if (arcount) {  // ar terms for y
 		ar = select(ebse, ebst[,1]:==arblock)[|1,1 \ arcount,2|] 
 		bse = ar
-		bst = "L":+ars':+".":+yvar
+		bst = "L":+ars:+".":+yvar
 	}
 	else {
 		bse = J(0,2,.)
@@ -689,8 +686,8 @@ string scalar make_yX(string scalar xvar,	// added variable
 			bxar = J(0,2,.)
 			bxarst = J(0,1,"")
 			for (i=1; i<=rows(bx); i++) {
-				bxar = bxar \ (bx[i]:*ar)
-				bxarst = bxarst \ ("L":+ars':+".":+bxst[i])
+				bxar = bxar \ (bx[i,]:*ar)
+				bxarst = bxarst \ ("L":+ars:+".":+bxst[i])
 			}
 			bse = bse \ bxar
 			bst = bst \ bxarst
