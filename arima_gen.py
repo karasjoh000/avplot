@@ -38,7 +38,7 @@ def gen_csv(args):
     })
 
     # Save the data to a CSV file
-    data.to_csv('arima_data.csv', index=False)
+    data.to_csv(f'ma{args.ma}ar{args.ar}e{args.epsilon_std}.csv', index=False)
 
     # Display the first 10 rows of the data
     print(data.head(10))
