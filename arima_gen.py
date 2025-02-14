@@ -7,7 +7,7 @@ def gen_csv(args):
     b0, b1, b2 = args.beta0, args.beta1, args.beta2
     phi = 0.6
     theta1, theta2, theta3 = 0.4, -0.2, 0.1
-    n = 50  # Number of data points
+    n = args.n  # Number of data points
 
     # Generate exogenous variables
     np.random.seed(42)  # For reproducibility
@@ -38,7 +38,7 @@ def gen_csv(args):
     })
 
     # Save the data to a CSV file
-    data.to_csv(f'ma{args.ma}ar{args.ar}e{args.epsilon_std}.csv', index=False)
+    data.to_csv(f'ma{args.ma}ar{args.ar}e{args.epsilon_std}n{n}.csv', index=False)
 
     # Display the first 10 rows of the data
     print(data.head(10))
@@ -61,6 +61,8 @@ if __name__ == "__main__":
                         help="Standard deviation for x2")
     parser.add_argument("--epsilon_std", type=float, default=1,
                         help="Standard deviation for epsilon")
+    parser.add_argument("--n", type=int, default=50,
+                        help="Number of data points")
     args = parser.parse_args()
     gen_csv(args)
     # accept MA, AR integers and beta0, beta1, beta2 coefficients, x1, x2 stddev and epsilon stdde
