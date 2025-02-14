@@ -691,13 +691,13 @@ string scalar make_yX(string scalar xvar,	// added variable
 	Xvars = tokens(st_global("e(covariates)"))
 	if (Xvars=="_NONE") Xvars = J(1,0,"") // void rowvector
 	yXvars = J(1,0,"")
-	ars = st_global("e(ar)")'
+	ars = st_global("e(ar)")
 	if (ars!="") {  // add lag operators onto lagged terms
-//		ars = subinword(tokens(ars), "1", "") // remove 1 from L1
+		ars = subinword(tokens(ars), "1", "")
 		arcount = cols(ars)
 		for (i=1; i<=arcount; i++) 
 			yXvars = yXvars, "L"+ars[i]+"." :+ (yvar,Xvars)
- 	}
+	}
 	else arcount = 0
 
 	yXvars = Xvars, yXvars // add unlagged Xvars
@@ -723,14 +723,14 @@ string scalar make_yX(string scalar xvar,	// added variable
 	if (arcount) {  // ar terms for y
 		ar = select(ebse, ebst[,1]:==arblock)[|1,1 \ arcount,2|] 
 		bse = ar
-		bst = "L":+ars:+".":+yvar
+		bst = ("L":+ars:+".":+yvar)'
 	}
 	else {
 		bse = J(0,2,.)
 		bst = J(0,1,"")
 	}
 
-	// add ARMAX X and lagged X coefficients
+	// addARMAX X and lagged X coefficients
 	bxst = select(ebst, ebst[,1]:==yroot)[,2]
 	if (bxst!="") {  // has _cons or Xvars
 		bx = select(ebse, ebst[,1]:==yroot) // X coefs including _cons
@@ -745,7 +745,7 @@ string scalar make_yX(string scalar xvar,	// added variable
 			bxarst = J(0,1,"")
 			for (i=1; i<=rows(bx); i++) {
 				bxar = bxar \ (bx[i,]:*ar)
-				bxarst = bxarst \ ("L":+ars:+".":+bxst[i])
+				bxarst = bxarst \ ("L":+ars:+".":+bxst[i])'
 			}
 			bse = bse \ bxar
 			bst = bst \ bxarst
