@@ -597,9 +597,13 @@ void ar(string scalar xvar, 		// added variable name
         arfima_ma_max = st_numscalar("e(ma_max)")
         arfima_ma_matrix = arfima_b_matrix[1, (cols(arfima_b_matrix) - arfima_ma_max-1)..(cols(arfima_b_matrix) - 2)]
         arfima_ma_matrix = J(1,1,1),arfima_ma_matrix
+"THETAS:"
+		arfima_ma_matrix
         arfima_sigma2 = arfima_b_matrix[1, cols(arfima_b_matrix)]
         arfima_d = arfima_b_matrix[1, cols(arfima_b_matrix) - 1]
         gammas = arfima_autocov(rX, arfima_sigma2, arfima_d, arfima_ma_max, arfima_ma_matrix)
+"GAMMAS:"
+		gammas
         S = Toeplitz(gammas', gammas)
         S
         //S = I(rX)
@@ -634,7 +638,7 @@ real matrix arfima_autocov(real scalar rows, real scalar sigma2, real scalar d, 
 
     // Initialize gamma and phi vectors
     gamma = J(1, rows, 0)
-    phi = J(1, 2*q+1, 0)
+    phi = J(1, q+1, 0)
 
     // Compute phi_k
     for (k = 0; k <= q; k++) {
@@ -644,6 +648,8 @@ real matrix arfima_autocov(real scalar rows, real scalar sigma2, real scalar d, 
         }
         phi[1, k+1] = sum_phi
     }
+"PHIS:"
+	phi
 	
     // Compute gamma_j
     for (j = 0; j < rows; j++) {
