@@ -41,8 +41,25 @@ return list
 >>                 r(se) =  .1986195193774165
 
 
-# if ar(1) ma(3) notation is used not all ma coefficients are reported. 
-# need to use arima(1,0,3) notation instead.
+# make_yX seems to fail when passed into st_view with AR > 1
+# note: I debug print the output of make_yX this is where the 
+# "y_t x1 x2 ..." output comes from.
+arima y_t x1 x2, ar(1 2 3 4) ma(1 2 3 4 5 6 7 8 9 10)
+gavplot x1, debug
+>>. gavplot x1, debug
+>>  got here 0
+>>  got here 1
+>>  y_t x1 x2 L1 2 3 4.y_t L1 2 3 4.x1 L1 2 3 4.x2 __000007
+>>variable L1 not found
+>>               st_view():  3598  Stata returned error
+>>                    ar():     -  function returned error
+>>                 <istmt>:     -  function returned error
+>>
+
+# here is the same run with AR = 1
+arima y_t x1 x2, ar(1) ma(1 2 3 4 5 6 7 8 9 10)
+gavplot x1, debug
+>>y_t x1 x2 L1.y_t L1.x1 L1.x2 __000007
 ```
 
 # synthetic data generation
