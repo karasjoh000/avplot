@@ -12,7 +12,7 @@ which gavplot
 
 
 //webuse friedman2, clear
-import delimited "arima_data.csv", clear
+import delimited "ma3ar1e0.05.csv", clear
 tset t
 arima y_t x1 x2, ar(1) ma(1 2 3)
 
