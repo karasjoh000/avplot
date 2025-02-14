@@ -40,6 +40,9 @@ return list
 >>               r(coef) =  1.375391806046776
 >>                 r(se) =  .1986195193774165
 
+
+# if ar(1) ma(3) notation is used not all ma coefficients are reported. 
+# need to use arima(1,0,3) notation instead.
 ```
 
 # synthetic data generation
