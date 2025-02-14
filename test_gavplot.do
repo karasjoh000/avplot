@@ -11,14 +11,52 @@ which gavplot
 // get rid of asterisks in e(x*|X*)
 
 
+//webuse friedman2, clear
+import delimited "arima_data.csv", clear
+tset t
+arima y_t x1 x2, ar(1) ma(1 2 3)
+
+local x_av x1
+
+capture noisily gavplot `x_av', debug nodisplay
+quietly {
+	if c(rc)==0 {
+		noi di as txt "   _b from arima     =  " ///
+			as result %18.16f _b[`x_av']
+		noi di as txt "   _b from reg ey ex =  " ///
+			as result %18.16f r(b_check)
+		noi di as txt "   diff in _b: " ///
+			as result %18.16f (_b[`x_av']-r(b_check)) 
+		noi assert reldif(_b[`x_av'], r(b_check)) < 1e-1	
+	}	
+}
+
+local x_av x2
+
+capture noisily gavplot `x_av', debug nodisplay
+quietly {
+	if c(rc)==0 {
+		noi di as txt "   _b from arima     =  " ///
+			as result %18.16f _b[`x_av']
+		noi di as txt "   _b from reg ey ex =  " ///
+			as result %18.16f r(b_check)
+		noi di as txt "   diff in _b: " ///
+			as result %18.16f (_b[`x_av']-r(b_check)) 
+		noi assert reldif(_b[`x_av'], r(b_check)) < 1e-1	
+	}	
+}
+
+exit
+
+
 webuse hsng2, clear
 local x_av hsngval
 
 // example from -help reg3-
-// webuse klein, clear
+ webuse klein, clear
 // save klein, replace
 //  test options ols, 2sls, sure, ireg3, w/ & w/o weights
-use klein, clear
+//use klein, clear
 gen taxw = round(taxnetx)
 reg3 (wagepriv consump govt capital1) (consump wagepriv wagegovt), 2sls
 ereturn list
