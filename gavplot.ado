@@ -592,18 +592,18 @@ void ar(string scalar xvar, 		// added variable name
     } else if (cmd == "arfima") { 
 "in arfima code path"
 "entering arfima autocov"
-               	arfima_b_matrix = st_matrix("e(b)")
-             	arfima_ar_max = st_numscalar("e(ar_max)") 
-         	arfima_ma_max = st_numscalar("e(ma_max)")
-        	arfima_ma_matrix = arfima_b_matrix[1, (cols(arfima_b_matrix) - arfima_ma_max-1)..(cols(arfima_b_matrix) - 2)]
-        	arfima_ma_matrix = J(1,1,1),arfima_ma_matrix
-	arfima_sigma2 = arfima_b_matrix[1, cols(arfima_b_matrix)]
-        	arfima_d = arfima_b_matrix[1, cols(arfima_b_matrix) - 1]
-	gammas = arfima_autocov(rX, arfima_sigma2, arfima_d, arfima_ma_max, arfima_ma_matrix)
-	S = Toeplitz(gammas', gammas)
-	S
-    //S = I(rX)
-	//S
+        arfima_b_matrix = st_matrix("e(b)")
+        arfima_ar_max = st_numscalar("e(ar_max)") 
+        arfima_ma_max = st_numscalar("e(ma_max)")
+        arfima_ma_matrix = arfima_b_matrix[1, (cols(arfima_b_matrix) - arfima_ma_max-1)..(cols(arfima_b_matrix) - 2)]
+        arfima_ma_matrix = J(1,1,1),arfima_ma_matrix
+        arfima_sigma2 = arfima_b_matrix[1, cols(arfima_b_matrix)]
+        arfima_d = arfima_b_matrix[1, cols(arfima_b_matrix) - 1]
+        gammas = arfima_autocov(rX, arfima_sigma2, arfima_d, arfima_ma_max, arfima_ma_matrix)
+        S = Toeplitz(gammas', gammas)
+        S
+        //S = I(rX)
+        //S
     } else {
         S = I(rX)
     }
@@ -665,6 +665,7 @@ real scalar pochhammer_memo(real scalar d, real scalar i)
     if (i == 0) return (1)
     if (i > 0) return ((d + i - 1) * pochhammer_memo(d, i - 1))
     if (i < 0) return (pochhammer_memo(d, i + 1) / (d + i))
+
 }
 
 
@@ -754,4 +755,5 @@ string scalar make_yX(string scalar xvar,	// added variable
 }
 
 end
+
 
