@@ -546,61 +546,70 @@ void ar(string scalar xvar, 		// added variable name
 	real scalar rX, cy
 	real colvector nonmiss, wmiss, w, d  // weight vector & eigenvector
 	string rowvector ar
-	
+"got here 0"
+	cmd = st_global("e(cmd)")
 "got here 1"  // "trace" messages for debugging Mata
 // st_view collect data from stata.
+	yX_return = make_yX(xvar, cons, bse_names)
+	yX_return
 	st_view(yXmiss, ., 
-		make_yX(xvar, cons, bse_names), touse)
+		yX_return, touse)
         // which ones have missing values from lag structure.
 	nonmiss = (rowmissing(yXmiss) :== 0)
+"got here 1.1"
 	st_select(yX, yXmiss, nonmiss)
 	if (wvar=="") w = 1
 	else {
 		st_view(wmiss, ., wvar, touse) // w incl. missing obs
 		st_select(w, wmiss, nonmiss)
+"got here 1.2"
 	}
 	rX = rows(yX)
 "got here 2"   
-    // TODO: get e(b) from stata using st_* transfer object to mata memory. 
-    // TODO: form sigma hat matrix here. kj
-	// form the MA(q) variance of the errors
-	//   see -help mf_spmatbanded- for banded matrix functions
-    // TODO can use smatband routines here. 
-    arima_b_matrix = st_matrix("e(b)")
-    // typical e(b) matrix looks like:
-    // e(b)[1,8]
-    //            wpi:       ARMA:       ARMA:       ARMA:       ARMA:       ARMA:       ARMA:      sigma:
-    //                          L.          L.         L2.         L3.         L4.         L5.            
-    //          _cons          ar          ma          ma          ma          ma          ma       _cons
-    // y1   .74660632   .85192643  -.33338791  -.17373807   .09292256   .17103687  -.07923895    .7132336
-    //
-    arima_ar_max = st_numscalar("e(ar_max)")
-    arima_ma_max = st_numscalar("e(ma_max)")
-    arima_sigma = st_numscalar("e(sigma)")
-    arima_sigma2 = arima_sigma^2 // NOT SURE IF THIS SHOULD BE SQUARED
-    // extract ma columns
-    arima_ma_matrix = arima_b_matrix[1, (cols(arima_b_matrix) - arima_ma_max)..(cols(arima_b_matrix) - 1)] 
-    // append 1 to the start of the matrix
-    arima_ma_matrix = J(1,1,1),arima_ma_matrix
-    // compute gamma vector
-    gamma = J(arima_ma_max + 1, 1, 0)
-    for (i = 1; i <= arima_ma_max + 1; i++) {
-        arima_ma_right_submatrix = arima_ma_matrix[1, 1..(cols(arima_ma_matrix) - (i - 1))]
-        arima_ma_left_submatrix = arima_ma_matrix[1, (1 + (i - 1))..cols(arima_ma_matrix)]
-        gamma[i] = arima_sigma * (arima_ma_right_submatrix * arima_ma_left_submatrix')
+    if (cmd == "arima") {
+        arima_b_matrix = st_matrix("e(b)")
+        arima_ar_max = st_numscalar("e(ar_max)")
+        arima_ma_max = st_numscalar("e(ma_max)")
+        arima_sigma = st_numscalar("e(sigma)")
+        arima_sigma2 = arima_sigma^2 // NOT SURE IF THIS SHOULD BE SQUARED
+        // extract ma columns
+        arima_ma_matrix = arima_b_matrix[1, (cols(arima_b_matrix) - arima_ma_max)..(cols(arima_b_matrix) - 1)] 
+        // append 1 to the start of the matrix
+        arima_ma_matrix = J(1,1,1),arima_ma_matrix
+        // compute gamma vector
+        gamma = J(arima_ma_max + 1, 1, 0)
+        for (i = 1; i <= arima_ma_max + 1; i++) {
+            arima_ma_right_submatrix = arima_ma_matrix[1, 1..(cols(arima_ma_matrix) - (i - 1))]
+            arima_ma_left_submatrix = arima_ma_matrix[1, (1 + (i - 1))..cols(arima_ma_matrix)]
+            gamma[i] = arima_sigma2 * (arima_ma_right_submatrix * arima_ma_left_submatrix')
+        }
+        // append zeros to the end of the gamma vector.
+        n_padding = rX - (arima_ma_max + 1)
+        v_padding = J(n_padding, 1, 0)
+        v_padding
+        gamma_padded = gamma \ v_padding
+        // compute the covariance matrix using tolpitz
+        S = Toeplitz(gamma_padded, gamma_padded')
+    } else if (cmd == "arfima") { 
+"in arfima code path"
+"entering arfima autocov"
+        arfima_b_matrix = st_matrix("e(b)")
+        arfima_ar_max = st_numscalar("e(ar_max)") 
+        arfima_ma_max = st_numscalar("e(ma_max)")
+        arfima_ma_matrix = arfima_b_matrix[1, (cols(arfima_b_matrix) - arfima_ma_max-1)..(cols(arfima_b_matrix) - 2)]
+        arfima_ma_matrix = J(1,1,1),arfima_ma_matrix
+        arfima_sigma2 = arfima_b_matrix[1, cols(arfima_b_matrix)]
+        arfima_d = arfima_b_matrix[1, cols(arfima_b_matrix) - 1]
+        gammas = arfima_autocov(rX, arfima_sigma2, arfima_d, arfima_ma_max, arfima_ma_matrix)
+        S = Toeplitz(gammas', gammas)
+        S
+        //S = I(rX)
+        //S
+    } else {
+        S = I(rX)
     }
-    // append zeros to the end of the gamma vector.
-    n_padding = rX - (arima_ma_max + 1)
-    v_padding = J(n_padding, 1, 0)
-    v_padding
-    gamma_padded = gamma \ v_padding
-    // compute the covariance matrix using tolpitz
-    S = Toeplitz(gamma_padded, gamma_padded')
-"S"; S
-
 	// calculate (y_tilde,X_tilde) in yX_
 	// take sqrt, nixing neg. eigenvals
-"got here 3"
 	symeigensystem(S, E, d) // find eigens of S
 	yX_ = quadcross(quadcross(E',sqrt(d:*(d:>0)),E'),w,yX)	
 	
@@ -617,6 +626,75 @@ void ar(string scalar xvar, 		// added variable name
 	}
 	else e[.,.] = yX_
 }
+
+
+real matrix arfima_autocov(real scalar rows, real scalar sigma2, real scalar d, real scalar q, real rowvector theta)
+{
+    real matrix gamma, phi
+    real scalar j, k, sum_phi, sum_gamma, term
+
+    // Initialize gamma and phi vectors
+    gamma = J(1, rows, 0)
+    phi = J(1, 2*q+1, 0)
+
+    // Compute phi_k
+    for (k = -q; k <= q; k++) {
+        sum_phi = 0
+        for (s = abs(k); s <= q; s++) {
+            sum_phi = sum_phi + theta[s+1] * theta[s-abs(k)+1]
+        }
+        phi[1, k+q+1] = sum_phi
+    }
+
+    // Compute gamma_j
+    for (j = 0; j < rows; j++) {
+        sum_gamma = 0
+        for (k = -q; k <= q; k++) {
+            term = phi[1, k+q+1] * exp(lngamma(1 - 2*d)) / (exp(lngamma(1 - d))^2)
+            term = term * (pochhammer_memo(d, k-j) / pochhammer_memo(1 - d, k-j))
+            sum_gamma = sum_gamma + term
+        }
+        gamma[1, j+1] = sigma2 * sum_gamma
+    }
+
+    return(gamma)
+
+}
+
+// Memoized Pochhammer function using an associative cache
+real scalar pochhammer_memo(real scalar d, real scalar i)
+{
+    real matrix cache
+	cache
+    if (missing(cache)) cache = J(100, 2, .)  // Initialize cache (adjust size as needed)
+   
+    // Check if value exists in cache
+    for (row = 1; row <= rows(cache); row++) {
+        if (cache[row, 1] == d & cache[row, 2] == i) {
+            return(cache[row, 3])
+        }
+    }
+
+    // Compute value if not cached
+    real scalar result
+    if (i == 0) result = 1
+    else if (i > 0) result = (d + i - 1) * pochhammer_memo(d, i - 1)
+    else result = pochhammer_memo(d, i + 1) / (d + i)
+
+    // Store result in cache
+    for (row = 1; row <= rows(cache); row++) {
+        if (missing(cache[row, 1])) { // Find empty slot
+            cache[row, 1] = d
+            cache[row, 2] = i
+            cache[row, 3] = result
+            break
+        }
+    }
+
+    return(result)
+}
+
+
 
 string scalar make_yX(string scalar xvar,	// added variable
 						string scalar cons, // _cons varname
@@ -703,4 +781,5 @@ string scalar make_yX(string scalar xvar,	// added variable
 }
 
 end
+
 
