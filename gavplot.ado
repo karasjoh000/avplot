@@ -613,7 +613,7 @@ void ar(string scalar xvar, 		// added variable name
     }
 	// calculate (y_tilde,X_tilde) in yX_
 	// take sqrt, nixing neg. eigenvals
-	symeigensystem(S, E, d) // find eigens of S
+	symeigensystem(invsym(S), E=., d=.) // find eigens of S
 	yX_ = quadcross(quadcross(E',sqrt(d:*(d:>0)),E'),w,yX)	
 	
 	// empty e_y & e_x including missing obs
