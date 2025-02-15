@@ -37,8 +37,14 @@ def gen_csv(args):
         'y_t': y
     })
 
+    # save data to data dir
+    import os
+    path = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(path, 'data')
+    path = os.path.join(path, f'ma{args.ma}ar{args.ar}e{args.epsilon_std}n{n}.csv')
+
     # Save the data to a CSV file
-    data.to_csv(f'ma{args.ma}ar{args.ar}e{args.epsilon_std}n{n}.csv', index=False)
+    data.to_csv(path, index=False)
 
     # Display the first 10 rows of the data
     print(data.head(10))

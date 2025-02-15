@@ -21,7 +21,7 @@ gavplot ogap
 
 
 # this does not work
-import delimited "arima_data.csv", clear
+import delimited "data/arima_data.csv", clear
 tset t
 arima y_t x1 x2, ar(1) ma(3)
 gavplot x1, debug
@@ -65,5 +65,5 @@ gavplot x1, debug
 # synthetic data generation
 ```bash 
 python arima_gen.py
-# creates arima_data.csv file of ar(1) ma(3) process with x1 x2 covariates. 
+# creates data/ma3ar1.csv file of ar(1) ma(3) process with x1 x2 covariates. 
 ```
